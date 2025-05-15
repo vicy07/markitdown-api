@@ -18,14 +18,17 @@ app = FastAPI(
 # Получаем токен из переменных окружения
 API_TOKEN = os.getenv("API_TOKEN")
 if not API_TOKEN:
+    logger.warning(f"API_TOKEN environment variable not set")
     raise RuntimeError("API_TOKEN environment variable not set")
 
 # Проверка токена
 def verify_token(authorization: str = Header(...)):
     if not authorization.startswith("Bearer "):
+        logger.warning(f"Invalid Authorization header format: {authorization}")
         raise HTTPException(status_code=401, detail="Invalid token format")
     token = authorization.split(" ")[1]
     if token != API_TOKEN:
+        logger.warning(f"Invalid token value received: {token}")
         raise HTTPException(status_code=403, detail="Invalid API token")
 
 FORBIDDEN_EXTENSIONS = [
