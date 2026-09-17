@@ -1,0 +1,26 @@
+name: Release retention
+
+on:
+  release:
+    types: [published]
+  schedule:
+    - cron: '42 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  retain-latest-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Delete every release except the latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mapfile -t release_ids < <(gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/releases?per_page=100" --jq 'add | .[1:][] | .id')
+          for release_id in "${release_ids[@]}"; do
+            gh api --method DELETE "repos/${GITHUB_REPOSITORY}/releases/${release_id}"
+          done
